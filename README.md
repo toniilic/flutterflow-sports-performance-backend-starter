@@ -48,7 +48,7 @@ graph TD
   ST -->|upload finalize| TRIG[Upload Trigger]
   TRIG --> JOBS[(analysis_jobs)]
 
-  FF -->|Start analysis (HTTP)| API[HTTP Functions]
+  FF -->|"Start analysis (HTTP)"| API[HTTP Functions]
   API --> JOBS
 
   JOBS --> WORKER[Job Processor]
