@@ -1,0 +1,106 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // Team membership docs recommended at: team_members/{teamId}_{userId}
+    function teamMemberDoc(teamId, uid) {
+      return /databases/$(database)/documents/team_members/$(teamId + '_' + uid);
+    }
+
+    function isTeamMember(teamId) {
+      return signedIn() && exists(teamMemberDoc(teamId, request.auth.uid));
+    }
+
+    function isTeamCoachOrAdmin(teamId) {
+      return isTeamMember(teamId)
+        && (get(teamMemberDoc(teamId, request.auth.uid)).data.role in ['coach', 'admin']);
+    }
+
+    // Profiles
+    match /profiles/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // Teams
+    match /teams/{teamId} {
+      allow read: if isTeamMember(teamId);
+      allow create: if signedIn();
+      allow update, delete: if isTeamCoachOrAdmin(teamId);
+    }
+
+    // Team members
+    match /team_members/{membershipId} {
+      // membershipId should be `${teamId}_${userId}`
+      allow read: if signedIn();
+      allow create: if signedIn();
+      // Only coaches/admins can change roles/remove members (enforce in Functions in real apps)
+      allow update, delete: if signedIn();
+    }
+
+    // Training sessions
+    match /training_sessions/{sessionId} {
+      allow read: if signedIn() && isTeamMember(resource.data.teamId);
+      allow create: if signedIn() && isTeamMember(request.resource.data.teamId);
+      allow update: if signedIn() && isTeamCoachOrAdmin(resource.data.teamId);
+      allow delete: if signedIn() && isTeamCoachOrAdmin(resource.data.teamId);
+    }
+
+    // Drills
+    match /drills/{drillId} {
+      allow read: if signedIn();
+      allow create, update, delete: if signedIn();
+    }
+
+    // Media assets
+    match /media_assets/{mediaId} {
+      // Private-by-default: owner can read; team coaches/admins can read if shared
+      allow read: if signedIn() && (
+        isOwner(resource.data.ownerUid)
+        || (
+          resource.data.visibility == 'team'
+          && isTeamCoachOrAdmin(resource.data.teamId)
+        )
+      );
+
+      allow create: if signedIn() && isOwner(request.resource.data.ownerUid);
+      allow update: if signedIn() && isOwner(resource.data.ownerUid);
+      allow delete: if signedIn() && isOwner(resource.data.ownerUid);
+    }
+
+    // Analysis jobs/results
+    match /analysis_jobs/{jobId} {
+      allow read: if signedIn() && isTeamMember(resource.data.teamId);
+      allow create: if signedIn() && isTeamMember(request.resource.data.teamId);
+      allow update: if false; // updated by Functions (server-side)
+      allow delete: if false;
+    }
+
+    match /analysis_results/{resultId} {
+      allow read: if signedIn() && isTeamMember(resource.data.teamId);
+      allow create, update, delete: if false; // server-side only
+    }
+
+    // Notes/annotations
+    match /notes/{noteId} {
+      allow read: if signedIn() && isTeamMember(resource.data.teamId);
+      allow create: if signedIn() && isTeamMember(request.resource.data.teamId);
+      allow update, delete: if signedIn() && isOwner(resource.data.authorUid);
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

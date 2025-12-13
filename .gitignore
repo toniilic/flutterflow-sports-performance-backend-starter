@@ -1,0 +1,44 @@
+# --- Secrets / local environment ---
+.env
+.env.*
+!.env.example
+
+# --- Firebase / Functions (Node + TypeScript) ---
+**/node_modules/
+
+# TypeScript build output (functions/src -> functions/lib)
+firebase/functions/lib/
+*.tsbuildinfo
+
+# Sourcemaps from tsc
+*.map
+
+# Firebase local state / emulator artifacts
+.firebase/
+**/.firebase/
+.firebaserc
+firebase/.firebaserc
+
+# Firebase CLI logs
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+
+# Functions local runtime config (do not commit)
+firebase/functions/.runtimeconfig.json
+
+# --- Test / coverage output ---
+coverage/
+.nyc_output/
+
+# --- Logs ---
+*.log
+
+# --- Editor / OS ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~

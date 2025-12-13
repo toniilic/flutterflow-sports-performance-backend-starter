@@ -1,0 +1,5 @@
+## FlutterFlow Sports Performance Backend Starter
+
+Repo URL: https://github.com/toniilic/flutterflow-sports-performance-backend-starter
+
+FlutterFlow apps for sports/performance tracking often outgrow “CRUD-only” backends once you add roles (athlete/coach), team visibility, private video uploads, and asynchronous AI analysis. This repository is a reusable backend starter that demonstrates a clean domain model, secure-by-default access patterns, and concrete integration points for FlutterFlow API Calls and Custom Actions. It includes **two equivalent implementation tracks**—a Firebase-first setup (Firestore/Storage/Functions/Rules) and a Supabase alternative (Postgres/Storage/Edge Functions/RLS)—so teams can choose the platform that fits their product. The project also includes an end-to-end video analysis workflow (upload → job → processing → results), with an AI provider abstraction and an example OpenAI-based metadata extractor. You can use it as a reference architecture, a starting point for your own repo, or a checklist for production concerns like idempotency, retries, indexing/pagination, and observability.

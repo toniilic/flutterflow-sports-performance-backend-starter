@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(ownerUid) {
+      return signedIn() && request.auth.uid == ownerUid;
+    }
+
+    // Store media at: media/{teamId}/{ownerUid}/{mediaId}
+    match /media/{teamId}/{ownerUid}/{mediaId} {
+      // Owner can read/write
+      allow read, write: if isOwner(ownerUid);
+
+      // Optional: allow team coaches/admins to read if object metadata indicates shared visibility.
+      // NOTE: Real implementations often gate this via Firestore + signed URLs.
+      // allow read: if signedIn() && (resource.metadata.visibility == 'team');
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
